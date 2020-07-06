@@ -44,6 +44,14 @@ class plgSystemCombinator extends CMSPlugin
 		$this->process('css');
 	}
 
+	/**
+	 * Process a specific list of files given in the plugin's parameters
+	 *
+	 * @param   string  $paramKey
+	 *
+	 * @return  void
+	 * @since   1.0.0
+	 */
 	protected function process(string $paramKey): void
 	{
 		$includeFiles = $this->preProcessFilesParameter($paramKey);
@@ -95,6 +103,9 @@ class plgSystemCombinator extends CMSPlugin
 	 *
 	 * @param   array   $combinedFiles
 	 * @param   string  $assetType
+	 *
+	 * @return  void
+	 * @since   1.0.0
 	 */
 	protected function includeCombinedFiles(array $combinedFiles, string $assetType): void
 	{
@@ -127,6 +138,9 @@ class plgSystemCombinator extends CMSPlugin
 	 * @param   array   $includeFiles
 	 * @param   array   $joomlaFiles
 	 * @param   string  $assetType
+	 *
+	 * @return  void
+	 * @since   1.0.0
 	 */
 	protected function removeReplacedFiles(array $includeFiles, array $joomlaFiles, string $assetType): void
 	{
@@ -286,7 +300,7 @@ class plgSystemCombinator extends CMSPlugin
 	 *
 	 * @param   string  $url
 	 *
-	 * @return  string
+	 * @return  string|null
 	 * @since   1.0.0
 	 */
 	private function assetURLToRelativeFile(string $url): ?string
@@ -344,6 +358,7 @@ class plgSystemCombinator extends CMSPlugin
 	 * @param   string  $outFile
 	 *
 	 * @return  bool  True if combining the files succeeded
+	 * @since   1.0.0
 	 */
 	private function combineFiles(array $files, string $outFile): bool
 	{
