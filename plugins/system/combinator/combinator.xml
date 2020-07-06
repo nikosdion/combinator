@@ -54,6 +54,30 @@
                         layout="joomla.form.field.subform.repeatable-table"
                         formsource="plugins/system/combinator/forms/filelist.xml"
                 />
+            </fieldset>
+            <fieldset
+                name="exportimport"
+                label="PLG_SYSTEM_COMBINATOR_FIELDSET_EXPORTIMPORT"
+                addfieldpath="/plugins/system/combinator/forms"
+            >
+
+                <field
+                    name="export"
+                    type="export"
+                    label="PLG_SYSTEM_COMBINATOR_EXPORT_LABEL"
+                    description="PLG_SYSTEM_COMBINATOR_EXPORT_DESC"
+                    url="index.php?option=com_ajax&amp;format=json&amp;group=system&amp;plugin=combinator"
+                    />
+
+                <field
+                    name="import"
+                    type="textarea"
+                    label="PLG_SYSTEM_COMBINATOR_IMPORT_LABEL"
+                    description="PLG_SYSTEM_COMBINATOR_IMPORT_DESC"
+                    rows="10"
+                    columns="50"
+                    class="input-xlarge"
+                    />
 
             </fieldset>
         </fields>

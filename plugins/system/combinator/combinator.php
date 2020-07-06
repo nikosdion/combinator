@@ -1,6 +1,6 @@
-<?php /** @noinspection PhpUnused */
+<?php
 /**
- * @package   ExposeJoomla
+ * @package   Combinator
  * @copyright Copyright (c)2020-2020 Nicholas K. Dionysopoulos
  * @license   GNU General Public License version 3, or later
  */
@@ -9,11 +9,15 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Filesystem\File;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Uri\Uri;
+use Joomla\Registry\Registry;
 
 /**
  * JavaScript and CSS combination for Joomla
+ *
+ * @noinspection PhpUnused
  *
  * @since 1.0.0
  */
@@ -42,6 +46,101 @@ class plgSystemCombinator extends CMSPlugin
 
 		$this->process('js');
 		$this->process('css');
+	}
+
+	public function onAjaxCombinator()
+	{
+		// We need to be in the backend
+		if (!$this->app->isClient('administrator'))
+		{
+			throw new RuntimeException(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+		}
+
+		// We need a token as a GET parameter
+		$token = $this->app->getSession()->getToken();
+
+		if ($this->app->input->get->getInt($token, 0) !== 1)
+		{
+			throw new RuntimeException(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+		}
+
+		// JSON format is mandatory
+		$format = $this->app->input->getCmd('format', 'html');
+
+		if ($format !== 'json')
+		{
+			throw new RuntimeException(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+		}
+
+		/** @var \Joomla\CMS\Document\JsonDocument $doc */
+		$doc = $this->app->getDocument();
+		$doc->setName(sprintf("plg_%s_%s_configuration", $this->_type, $this->_name));
+		$doc->setMimeEncoding('application/json');
+
+		return json_encode($this->params);
+	}
+
+	public function onExtensionBeforeSave($context, $table, $isNew, $data): bool
+	{
+		// Make sure we are saving a plugin
+		if ($context != 'com_plugins.plugin')
+		{
+			return true;
+		}
+
+		// Make sure there is a plugin table object being saved
+		if (!is_object($table))
+		{
+			return true;
+		}
+
+		// Check that it's the correct plugin being saved
+		$checks = [
+			'type' => 'plugin',
+			'element' => $this->_name,
+			'folder' => $this->_type,
+		];
+
+		foreach ($checks as $k => $v)
+		{
+			if (!property_exists($table, $k))
+			{
+				return true;
+			}
+
+			if ($table->{$k} != $v)
+			{
+				return true;
+			}
+		}
+
+		// If it's a new entry this is not the user saving the plugin, now, is it?
+		if ($isNew)
+		{
+			return true;
+		}
+
+		// Check that we do have a JSON string
+		$json = $data['params']['import'] ?? '';
+
+		if (empty($json))
+		{
+			return true;
+		}
+
+		$decoded = @json_decode($json, true);
+
+		if (empty($decoded))
+		{
+			return true;
+		}
+
+		$params = new Registry($decoded['data'][0] ?? '{}');
+		$params->set('import', '');
+
+		$table->params = $params->toString('JSON');
+
+		return true;
 	}
 
 	/**
@@ -261,7 +360,7 @@ class plgSystemCombinator extends CMSPlugin
 				continue;
 			}
 
-			$ret[$tag] = $ret[$tag] ?? [];
+			$ret[$tag]   = $ret[$tag] ?? [];
 			$ret[$tag][] = $file;
 		}
 
