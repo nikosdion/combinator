@@ -1,0 +1,25 @@
+{
+	"name": "nikosdion/combinator",
+	"description": "Combine JavaScript and CSS on your Joomla site",
+	"keywords": [
+		"joomla",
+		"combine",
+		"javascript",
+		"css"
+	],
+	"type": "project",
+	"license": "GPL-3.0-or-later",
+	"homepage": "https://github.com/nikosdion/combine",
+	"authors": [
+		{
+			"name": "Nicholas K. Dionysopoulos",
+			"email": "nicholas_NO_SPAM_PLEASE@dionysopoulos.me",
+			"homepage": "http://www.dionysopoulos.me",
+			"role": "Lead Developer"
+		}
+	],
+	"minimum-stability": "stable",
+	"require": {
+		"php": "^7.1"
+	}
+}

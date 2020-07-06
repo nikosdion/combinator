@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <field
+            name="file"
+            type="text"
+            label="PLG_SYSTEM_COMBINATOR_FILE_LABEL"
+            description="PLG_SYSTEM_COMBINATOR_FILE_DESC"
+            hint="PLG_SYSTEM_COMBINATOR_FILE_PLACEHOLDER"
+    />
+
+    <field
+            name="output"
+            type="text"
+            default=""
+            label="PLG_SYSTEM_COMBINATOR_OUTPUT_LABEL"
+            description="PLG_SYSTEM_COMBINATOR_OUTPUT_DESC"
+            hint="PLG_SYSTEM_COMBINATOR_OUTPUT_PLACEHOLDER"
+    />
+</form>

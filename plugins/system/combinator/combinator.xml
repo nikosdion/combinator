@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension version="3.9.0" type="plugin" group="system" method="upgrade">
+    <name>PLG_SYSTEM_COMBINATOR</name>
+    <version>1.0.0</version>
+    <creationDate>2020-07-07</creationDate>
+
+    <author>Nicholas K. Dionysopoulos</author>
+    <authorEmail>no-reply@dionysopoulos.me</authorEmail>
+    <authorUrl>https://www.dionysopoulos.me</authorUrl>
+
+    <copyright>Copyright (c)2020 Nicholas K. Dionysopoulos</copyright>
+    <license>GNU GPL v3 or later</license>
+
+    <description>PLG_SYSTEM_COMBINATOR_XML_DESC</description>
+
+    <files>
+        <filename plugin="combinator">combinator.php</filename>
+        <folder>forms</folder>
+
+        <filename>.htaccess</filename>
+        <filename>web.config</filename>
+    </files>
+
+    <!-- Create the folder ROOT/media/plg_system_combinator for our combined files -->
+    <media folder="media" destination="plg_system_combinator">
+        <folder>js</folder>
+        <folder>css</folder>
+    </media>
+
+    <languages folder="language">
+        <language tag="en-GB">en-GB/en-GB.plg_system_combinator.ini</language>
+        <language tag="en-GB">en-GB/en-GB.plg_system_combinator.sys.ini</language>
+    </languages>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field
+                        name="js"
+                        type="subform"
+                        label="PLG_SYSTEM_COMBINATOR_JS_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_JS_DESC"
+                        multiple="true"
+                        layout="joomla.form.field.subform.repeatable-table"
+                        formsource="plugins/system/combinator/forms/filelist.xml"
+                />
+
+                <field
+                        name="css"
+                        type="subform"
+                        label="PLG_SYSTEM_COMBINATOR_CSS_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_CSS_DESC"
+                        multiple="true"
+                        layout="joomla.form.field.subform.repeatable-table"
+                        formsource="plugins/system/combinator/forms/filelist.xml"
+                />
+
+            </fieldset>
+        </fields>
+    </config>
+</extension>
