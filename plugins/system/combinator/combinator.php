@@ -80,7 +80,7 @@ class plgSystemCombinator extends CMSPlugin
 		return json_encode($this->params);
 	}
 
-	public function onExtensionBeforeSave($context, $table, $isNew, $data): bool
+	public function onExtensionBeforeSave($context = '', $table = null, $isNew = false, $data = []): bool
 	{
 		// Make sure we are saving a plugin
 		if ($context != 'com_plugins.plugin')
