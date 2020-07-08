@@ -80,6 +80,16 @@ class plgSystemCombinator extends CMSPlugin
 		return json_encode($this->params);
 	}
 
+	/**
+	 * Handles the options import. Obviously it will only work if the plugin is enabled!
+	 *
+	 * @param   string  $context
+	 * @param   null    $table
+	 * @param   bool    $isNew
+	 * @param   array   $data
+	 *
+	 * @return  bool
+	 */
 	public function onExtensionBeforeSave($context = '', $table = null, $isNew = false, $data = []): bool
 	{
 		// Make sure we are saving a plugin
