@@ -19,7 +19,7 @@ use Joomla\Registry\Registry;
  *
  * @noinspection PhpUnused
  *
- * @since 1.0.0
+ * @since        1.0.0
  */
 class plgSystemCombinator extends CMSPlugin
 {
@@ -113,9 +113,9 @@ class plgSystemCombinator extends CMSPlugin
 
 		// Check that it's the correct plugin being saved
 		$checks = [
-			'type' => 'plugin',
+			'type'    => 'plugin',
 			'element' => $this->_name,
-			'folder' => $this->_type,
+			'folder'  => $this->_type,
 		];
 
 		foreach ($checks as $k => $v)
@@ -478,10 +478,26 @@ class plgSystemCombinator extends CMSPlugin
 	 */
 	private function combineFiles(array $files, string $outFile): bool
 	{
-		$combined = array_reduce($files, function (string $out, string $file) {
+		$fileType = pathinfo($outFile, PATHINFO_EXTENSION);
+
+		$combined = array_reduce($files, function (string $out, string $file) use ($fileType) {
+			$contents = @file_get_contents(JPATH_SITE . '/' . $file);
+
+			if ($contents === false)
+			{
+				return $out;
+			}
+
+			if ($fileType === 'css')
+			{
+				$prefix   = Uri::root(true);
+				$prefix   = empty($prefix) ? '/' : $prefix;
+				$contents = $this->fixRelativeFolder($contents, $prefix . dirname($file));
+			}
+
 			return $out
 				. (empty($out) ? '' : "\n\n")
-				. @file_get_contents(JPATH_SITE . '/' . $file);
+				. $contents;
 		}, '');
 
 		return File::write($outFile, $combined);
@@ -502,9 +518,9 @@ class plgSystemCombinator extends CMSPlugin
 
 		foreach ($taggedFiles as $tag => $files)
 		{
-			$fileSum         = md5(array_reduce($files, function ($carry, $file) {
-				return $carry . ':' . md5_file($file);
-			}, ''));
+			$fileSum         = md5(md5_file(__FILE__) . array_reduce($files, function ($carry, $file) {
+					return $carry . ':' . md5_file($file);
+				}, ''));
 			$outFileBasename = sprintf("%s.%s", md5($this->app->getDocument()->getMediaVersion() . $fileSum), $assetType);
 			$outFile         = sprintf("%s/media/plg_system_combinator/%s/%s", JPATH_SITE, $assetType, $outFileBasename);
 			$combinedFiles[] = sprintf("/media/plg_system_combinator/%s/%s", $assetType, $outFileBasename);
@@ -517,4 +533,21 @@ class plgSystemCombinator extends CMSPlugin
 
 		return $combinedFiles;
 	}
+
+	/**
+	 * Fixes the relative folder names in CSS `url()` parameters/
+	 *
+	 * @param   string  $content  The CSS content to fix
+	 * @param   string  $dirname  The base directory to rebase relative links to
+	 *
+	 * @return  string
+	 */
+	private function fixRelativeFolder(string $content, string $dirname): string
+	{
+		$content = preg_replace('#url\s{0,}\(\s{0,}\"\.\./#i', 'url("' . $dirname . '/../', $content);
+		$content = preg_replace('#url\s{0,}\(\s{0,}\'\.\./#i', 'url(\'' . $dirname . '/../', $content);
+
+		return $content;
+	}
+
 }
