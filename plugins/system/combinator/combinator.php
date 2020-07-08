@@ -48,6 +48,12 @@ class plgSystemCombinator extends CMSPlugin
 		$this->process('css');
 	}
 
+	/**
+	 * Handles the export of the plugin's configuration
+	 *
+	 * @return  string
+	 * @since   1.0.0
+	 */
 	public function onAjaxCombinator()
 	{
 		// We need to be in the backend
@@ -89,6 +95,7 @@ class plgSystemCombinator extends CMSPlugin
 	 * @param   array   $data
 	 *
 	 * @return  bool
+	 * @since   1.0.0
 	 */
 	public function onExtensionBeforeSave($context = '', $table = null, $isNew = false, $data = []): bool
 	{
