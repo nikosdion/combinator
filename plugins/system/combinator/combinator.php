@@ -546,17 +546,18 @@ class plgSystemCombinator extends CMSPlugin
 	{
 		$replaceCallback = function (array $matches) use ($dirname): string {
 			// Absolute URL or relative path with leading slash. Nothing to do.
-			if ((substr($matches[1], 0, 1) == '/') || (strpos($matches[1], '://') !== false))
+			$uri = trim($matches[1], '"\'');
+
+			if ((substr($uri, 0, 1) == '/') || (strpos($uri, '://') !== false))
 			{
 				return $matches[0];
 			}
 
 			// Relative path without leading slash, with or without dots
-			return sprintf('url("%s/%s")', $dirname, $matches[1]);
+			return sprintf('url("%s/%s")', $dirname, $uri);
 		};
 
-		$content = preg_replace_callback('#url\s{0,}\(\s{0,}\"(.*?)\"\s{0,}\)#i', $replaceCallback, $content);
-		$content = preg_replace_callback('#url\s{0,}\(\s{0,}\'(.*?)\'\s{0,}\)#i', $replaceCallback, $content);
+		$content = preg_replace_callback('#url\s{0,}\(\s{0,}(.*?)\s{0,}\)#i', $replaceCallback, $content);
 
 		return $content;
 	}
