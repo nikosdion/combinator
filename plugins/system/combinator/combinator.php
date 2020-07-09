@@ -44,8 +44,8 @@ class plgSystemCombinator extends CMSPlugin
 			return;
 		}
 
-		$this->process('js');
 		$this->process('css');
+		$this->process('js');
 	}
 
 	/**
@@ -369,14 +369,6 @@ class plgSystemCombinator extends CMSPlugin
 				continue;
 			}
 
-			// I will only include files which exist on the server and are readable by PHP
-			$absoluteFilePath = JPATH_ROOT . '/' . $file;
-
-			if (!@is_file($absoluteFilePath) || !@is_readable($absoluteFilePath))
-			{
-				continue;
-			}
-
 			$ret[$tag]   = $ret[$tag] ?? [];
 			$ret[$tag][] = $file;
 		}
@@ -401,6 +393,15 @@ class plgSystemCombinator extends CMSPlugin
 
 		// Magically include regular and minified files, no matter what you gave me as input
 		$ret = array_map([$this, 'autoMinifiedSuffixes'], $ret);
+
+		// I will only include files which exist on the server and are readable by PHP
+		$ret = array_map(function ($files) {
+			return array_filter($files, function ($file) {
+				$absoluteFilePath = JPATH_ROOT . '/' . $file;
+
+				return @is_file($absoluteFilePath) && @is_readable($absoluteFilePath);
+			});
+		}, $ret);
 
 		return $ret;
 	}
