@@ -544,8 +544,19 @@ class plgSystemCombinator extends CMSPlugin
 	 */
 	private function fixRelativeFolder(string $content, string $dirname): string
 	{
-		$content = preg_replace('#url\s{0,}\(\s{0,}\"\.\./#i', 'url("' . $dirname . '/../', $content);
-		$content = preg_replace('#url\s{0,}\(\s{0,}\'\.\./#i', 'url(\'' . $dirname . '/../', $content);
+		$replaceCallback = function (array $matches) use ($dirname): string {
+			// Absolute URL or relative path with leading slash. Nothing to do.
+			if ((substr($matches[1], 0, 1) == '/') || (strpos($matches[1], '://') !== false))
+			{
+				return $matches[0];
+			}
+
+			// Relative path without leading slash, with or without dots
+			return sprintf('url("%s/%s")', $dirname, $matches[1]);
+		};
+
+		$content = preg_replace_callback('#url\s{0,}\(\s{0,}\"(.*?)\"\s{0,}\)#i', $replaceCallback, $content);
+		$content = preg_replace_callback('#url\s{0,}\(\s{0,}\'(.*?)\'\s{0,}\)#i', $replaceCallback, $content);
 
 		return $content;
 	}
