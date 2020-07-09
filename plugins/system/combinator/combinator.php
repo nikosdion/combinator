@@ -399,6 +399,9 @@ class plgSystemCombinator extends CMSPlugin
 			$ret = $temp;
 		}
 
+		// Magically include regular and minified files, no matter what you gave me as input
+		$ret = array_map([$this, 'autoMinifiedSuffixes'], $ret);
+
 		return $ret;
 	}
 
@@ -560,6 +563,41 @@ class plgSystemCombinator extends CMSPlugin
 		$content = preg_replace_callback('#url\s{0,}\(\s{0,}(.*?)\s{0,}\)#i', $replaceCallback, $content);
 
 		return $content;
+	}
+
+	/**
+	 * Automatically add minified and non-minified files, no matter the input
+	 *
+	 * Given a list of files, it will check whether each file is regular (e.g. .css) or minified (.min.css). It will add
+	 * the other version (e.g. .min.css for .css and .css for .min.css) right after. This allows us to magically include
+	 * both minified and non-minified files no matter what the user gave us.
+	 *
+	 * @param   array  $files
+	 *
+	 * @return  array
+	 */
+	private function autoMinifiedSuffixes(array $files): array
+	{
+		$ret = [];
+
+		foreach ($files as $file)
+		{
+			$ret[] = $file;
+
+			$ext    = '.' . pathinfo($file, PATHINFO_EXTENSION);
+			$minExt = '.min' . $ext;
+
+			if (substr($file, -strlen($minExt)) === $minExt)
+			{
+				$ret[] = substr($file, 0, -strlen($minExt)) . $ext;
+			}
+			else
+			{
+				$ret[] = substr($file, 0, -strlen($ext)) . $minExt;
+			}
+		}
+
+		return $ret;
 	}
 
 }
