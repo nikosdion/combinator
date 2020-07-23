@@ -136,6 +136,14 @@
                         description="PLG_SYSTEM_COMBINATOR_CLOSURECOMPILER_DESC"
                         class="input-xlarge" />
 
+                <field
+                        name="magicKey"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_COMBINATOR_MAGICKEY_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_MAGICKEY_DESC"
+                        class="input-xlarge" />
+
             </fieldset>
             <fieldset
                 name="exportimport"

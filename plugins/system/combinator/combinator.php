@@ -9,6 +9,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Filesystem\File;
+use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Uri\Uri;
@@ -84,6 +85,14 @@ class plgSystemCombinator extends CMSPlugin
 	 */
 	public function onAjaxCombinator()
 	{
+		// Special case: a request with a Magic Key. Handle a special command.
+		$magicKey = trim($this->params->get('magicKey', ''));
+
+		if (!empty($magicKey) && ($this->app->input->get->get('magic', '') === $magicKey))
+		{
+			return $this->handleCommand();
+		}
+
 		// We need to be in the backend
 		if (!$this->app->isClient('administrator'))
 		{
@@ -863,5 +872,52 @@ class plgSystemCombinator extends CMSPlugin
 		$ret = trim(shell_exec($cmd));
 
 		return empty($ret) ? null : $ret;
+	}
+
+	/**
+	 * Handles a front-end command through com_ajax.
+	 *
+	 * Call me with a URL like:
+	 * https://www.example.com/index.php?option=com_ajax&group=system&plugin=combinator&format=raw&&akaction=purgemagic=MAGIC_KEY
+	 *
+	 * @return  mixed
+	 * @since   1.0.0
+	 */
+	private function handleCommand()
+	{
+		$action = $this->app->input->get->getCmd('akaction', 'purge');
+
+		switch ($action)
+		{
+			case 'purge':
+				$this->purgeCached();
+
+				return json_encode(true);
+				break;
+
+			default:
+				throw new RuntimeException(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+				break;
+		}
+	}
+
+	/**
+	 * Purges all cached CSS and JS files
+	 *
+	 * @return  void
+	 * @since   1.0.0
+	 */
+	private function purgeCached(): void
+	{
+		$mediaRoot    = JPATH_SITE . '/media/plg_system_combinator/';
+		$mediaFolders = [
+			$mediaRoot . 'css',
+			$mediaRoot . 'js',
+		];
+		foreach ($mediaFolders as $folder)
+		{
+			$files = Folder::files($folder, '.', false, true, ['.gitkeep']);
+			$this->deleteFiles($files);
+		}
 	}
 }
