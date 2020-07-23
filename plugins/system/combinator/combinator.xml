@@ -53,6 +53,22 @@
                 />
 
                 <field
+                        name="css"
+                        type="subform"
+                        label="PLG_SYSTEM_COMBINATOR_CSS_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_CSS_DESC"
+                        multiple="true"
+                        layout="joomla.form.field.subform.repeatable-table"
+                        formsource="plugins/system/combinator/forms/filelist.xml"
+                />
+
+            </fieldset>
+            <fieldset
+                name="advanced"
+                label="PLG_SYSTEM_COMBINATOR_FIELDSET_ADVANCED"
+            >
+
+                <field
                         name="minify_js"
                         type="radio"
                         default="0"
@@ -65,14 +81,16 @@
                 </field>
 
                 <field
-                        name="css"
-                        type="subform"
-                        label="PLG_SYSTEM_COMBINATOR_CSS_LABEL"
-                        description="PLG_SYSTEM_COMBINATOR_CSS_DESC"
-                        multiple="true"
-                        layout="joomla.form.field.subform.repeatable-table"
-                        formsource="plugins/system/combinator/forms/filelist.xml"
-                />
+                        name="compress_js"
+                        type="radio"
+                        default="0"
+                        label="PLG_SYSTEM_COMBINATOR_COMPRESS_JS_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_COMPRESS_JS_DESC"
+                        class="btn-group btn-group-yesno"
+                >
+                    <option value="1">JYES</option>
+                    <option value="0">JNO</option>
+                </field>
 
                 <field
                         name="minify_css"
@@ -80,6 +98,18 @@
                         default="0"
                         label="PLG_SYSTEM_COMBINATOR_MINIFY_CSS_LABEL"
                         description="PLG_SYSTEM_COMBINATOR_MINIFY_CSS_DESC"
+                        class="btn-group btn-group-yesno"
+                >
+                    <option value="1">JYES</option>
+                    <option value="0">JNO</option>
+                </field>
+
+                <field
+                        name="compress_css"
+                        type="radio"
+                        default="0"
+                        label="PLG_SYSTEM_COMBINATOR_COMPRESS_CSS_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_COMPRESS_CSS_DESC"
                         class="btn-group btn-group-yesno"
                 >
                     <option value="1">JYES</option>

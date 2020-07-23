@@ -32,7 +32,11 @@ Internal builder task to build one plugin installation package at a time
 			<fileset dir="${plugin_dir}">
 				<include name="**" />
 				<exclude name="media/css/*.css" />
+				<exclude name="media/css/*.css.gz" />
+				<exclude name="media/css/*.css.br" />
 				<exclude name="media/js/*.js" />
+				<exclude name="media/js/*.js.gz" />
+				<exclude name="media/js/*.js.br" />
 			</fileset>
 		</zipme>
 	</target>

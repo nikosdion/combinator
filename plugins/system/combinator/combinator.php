@@ -25,12 +25,37 @@ use Joomla\Registry\Registry;
 class plgSystemCombinator extends CMSPlugin
 {
 	/**
+	 * Does this PHP installation support GZip compression?
+	 *
+	 * @var   bool
+	 * @since 1.0.0
+	 */
+	protected $hasGZip = false;
+
+	/**
+	 * Does this PHP installation support Brotli compression?
+	 *
+	 * @var   bool
+	 * @since 1.0.0
+	 */
+	protected $hasBrotli = false;
+
+	/**
 	 * Application object. Automatically populated by the CMSPlugin constructor.
 	 *
 	 * @var   SiteApplication
 	 * @since 1.0.0
 	 */
 	protected $app;
+
+	public function __construct(&$subject, $config = [])
+	{
+		parent::__construct($subject, $config);
+
+		$this->hasGZip   = function_exists('gzdeflate');
+		$this->hasBrotli = function_exists('brotli_compress');
+	}
+
 
 	/**
 	 * Runs before Joomla's Document object compiles the HEAD element.
@@ -562,15 +587,17 @@ class plgSystemCombinator extends CMSPlugin
 			$minifiedFileRelative = sprintf("/media/plg_system_combinator/%s/%s", $assetType, $minifiedFileBasename);
 			$minifiedFile         = JPATH_SITE . $minifiedFileRelative;
 
-			// Joomla debug mode: always regenerate the file
-			if (JDEBUG && @is_file($outFile))
+			// Joomla debug mode: always regenerate the files
+			if (JDEBUG)
 			{
-				JFile::delete($outFile);
-			}
-
-			if (JDEBUG && @is_file($minifiedFile))
-			{
-				JFile::delete($minifiedFile);
+				$this->deleteFiles([
+					$outFile,
+					$outFile . '.gz',
+					$outFile . '.br',
+					$minifiedFile,
+					$minifiedFile . '.gz',
+					$minifiedFile . '.br',
+				]);
 			}
 
 			// Combine files if the combined file does not already exist
@@ -580,14 +607,24 @@ class plgSystemCombinator extends CMSPlugin
 			}
 
 			// Minify
-			if ($this->conditionalMinify($outFile, $minifiedFile))
+			$didMinify = $this->conditionalMinify($outFile, $minifiedFile);
+
+			// Compress combined file
+			$this->conditionalCompress($outFile);
+
+			if ($didMinify)
 			{
+				// Compress the combined and minified file
+				$this->conditionalCompress($minifiedFile);
+
+				// Add the combined and minified file to the queue
 				$combinedFiles[] = $minifiedFileRelative;
+
+				continue;
 			}
-			else
-			{
-				$combinedFiles[] = $outFileRelative;
-			}
+
+			// Add the combined file to the queue
+			$combinedFiles[] = $outFileRelative;
 		}
 
 		return $combinedFiles;
@@ -674,10 +711,80 @@ class plgSystemCombinator extends CMSPlugin
 		}
 
 		/** @var \MatthiasMullie\Minify\Minify $minifier */
-		$minifier = new $class($sourceFile);
+		$minifier        = new $class($sourceFile);
+		$minifiedContent = $minifier->minify();
 
-		$minifier->minify($minifiedFile);
+		return File::write($minifiedFile, $minifiedContent);
+	}
 
-		return @is_file($minifiedFile);
+	/**
+	 * Conditionally compress a file with GZip and / or Brotli compression
+	 *
+	 * A file is compressed if its exists, is readable, PHP supports GZip and/or Bortli compression and the
+	 * corresponding compressed file (with a .gz or .br extension, respectively) does not already exist.
+	 *
+	 * @param   string  $sourceFile
+	 */
+	private function conditionalCompress(string $sourceFile): void
+	{
+		$fileType = pathinfo($sourceFile, PATHINFO_EXTENSION);
+		$compress = $this->params->get('compress_' . $fileType, 0) == 1;
+
+		if (!$compress)
+		{
+			return;
+		}
+
+		if (!$this->hasGZip && !$this->hasBrotli)
+		{
+			return;
+		}
+
+		if (!@is_file($sourceFile))
+		{
+			return;
+		}
+
+		$outGZip     = $sourceFile . '.gz';
+		$outBrotli   = $sourceFile . '.br';
+		$needsGzip   = $this->hasGZip && !@file_exists($outGZip);
+		$needsBrotli = $this->hasBrotli && !@file_exists($outBrotli);
+
+		if (!$needsGzip && !$needsBrotli)
+		{
+			return;
+		}
+
+		$content = @file_get_contents($sourceFile);
+
+		if ($content === false)
+		{
+			return;
+		}
+
+		if ($needsGzip)
+		{
+			$outData = gzencode($content, 9, FORCE_GZIP);
+			File::write($outGZip, $outData);
+		}
+
+		if ($needsBrotli)
+		{
+			$outData = brotli_compress($content, 11, BROTLI_TEXT);
+			File::write($outBrotli, $outData);
+		}
+	}
+
+	private function deleteFiles(array $files): void
+	{
+		foreach ($files as $file)
+		{
+			if (!@is_file($file))
+			{
+				continue;
+			}
+
+			File::delete($file);
+		}
 	}
 }
