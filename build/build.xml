@@ -21,6 +21,23 @@
 	</target>
 
 	<!--
+Internal builder task to build one plugin installation package at a time
+-->
+	<target name="package-plugin-item" description="Package a single plugin">
+		<echo message="Packaging plugin ${plugin_area}/${plugin_name}" />
+
+		<property name="plugin_package" value="${dirs.release}/plg_${plugin_area}_${plugin_name}.zip" />
+
+		<zipme basedir="${plugin_dir}" destfile="${plugin_package}" includeemptydirs="true">
+			<fileset dir="${plugin_dir}">
+				<include name="**" />
+				<exclude name="media/css/*.css" />
+				<exclude name="media/js/*.js" />
+			</fileset>
+		</zipme>
+	</target>
+
+	<!--
 	====================================================================================================
 	Tasks - Documentation
 	====================================================================================================

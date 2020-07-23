@@ -12,6 +12,7 @@ use Joomla\CMS\Filesystem\File;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\Version;
 use Joomla\Registry\Registry;
 
 /**
@@ -43,6 +44,8 @@ class plgSystemCombinator extends CMSPlugin
 		{
 			return;
 		}
+
+		require_once __DIR__ . '/vendor/autoload.php';
 
 		$this->process('css');
 		$this->process('js');
@@ -520,18 +523,70 @@ class plgSystemCombinator extends CMSPlugin
 	{
 		$combinedFiles = [];
 
+		/**
+		 * I cannot use Joomla's media version to create the combined file's name because in Site Debug mode this
+		 * is changed on every page load. Instead, I will copy the code from Joomla's Version class to create my
+		 * own.
+		 */
+		$version      = new Version();
+		$secretKey    = $this->app->get('secret');
+		$mediaVersion = md5($version->getLongVersion() . $secretKey);
+
+		/**
+		 * Reduces a list of files to a string of their MD5 hashes.
+		 *
+		 * Ensures that any changed static media file will result in the combined file being regenerated under a
+		 * different name.
+		 *
+		 * @param   string  $carry  The long string generated so far
+		 * @param   string  $file   Absolute filesystem path of a static media file
+		 *
+		 * @return  string  Long string of MD5 hashes separated by a colon
+		 */
+		$reduceFunction = function (string $carry, string $file): string {
+			return $carry . (empty($carry) ? '' : ':') . md5_file($file);
+		};
+
 		foreach ($taggedFiles as $tag => $files)
 		{
-			$fileSum         = md5(md5_file(__FILE__) . array_reduce($files, function ($carry, $file) {
-					return $carry . ':' . md5_file($file);
-				}, ''));
-			$outFileBasename = sprintf("%s.%s", md5($this->app->getDocument()->getMediaVersion() . $fileSum), $assetType);
-			$outFile         = sprintf("%s/media/plg_system_combinator/%s/%s", JPATH_SITE, $assetType, $outFileBasename);
-			$combinedFiles[] = sprintf("/media/plg_system_combinator/%s/%s", $assetType, $outFileBasename);
+			// Create a combined
+			$baseFileName         = md5(
+				$mediaVersion .
+				md5_file(__FILE__) .
+				array_reduce($files, $reduceFunction, '')
+			);
+			$outFileBasename      = sprintf("%s.%s", $baseFileName, $assetType);
+			$outFileRelative      = sprintf("/media/plg_system_combinator/%s/%s", $assetType, $outFileBasename);
+			$outFile              = JPATH_SITE . $outFileRelative;
+			$minifiedFileBasename = sprintf("%s.%s", $baseFileName, 'min.' . $assetType);
+			$minifiedFileRelative = sprintf("/media/plg_system_combinator/%s/%s", $assetType, $minifiedFileBasename);
+			$minifiedFile         = JPATH_SITE . $minifiedFileRelative;
 
-			if (!$this->combineFiles($files, $outFile))
+			// Joomla debug mode: always regenerate the file
+			if (JDEBUG && @is_file($outFile))
+			{
+				JFile::delete($outFile);
+			}
+
+			if (JDEBUG && @is_file($minifiedFile))
+			{
+				JFile::delete($minifiedFile);
+			}
+
+			// Combine files if the combined file does not already exist
+			if (!@is_file($outFile) && !$this->combineFiles($files, $outFile))
 			{
 				return [];
+			}
+
+			// Minify
+			if ($this->conditionalMinify($outFile, $minifiedFile))
+			{
+				$combinedFiles[] = $minifiedFileRelative;
+			}
+			else
+			{
+				$combinedFiles[] = $outFileRelative;
 			}
 		}
 
@@ -601,4 +656,28 @@ class plgSystemCombinator extends CMSPlugin
 		return $ret;
 	}
 
+	private function conditionalMinify(string $sourceFile, string $minifiedFile): bool
+	{
+		$fileType = pathinfo($sourceFile, PATHINFO_EXTENSION);
+		$minify   = $this->params->get('minify_' . $fileType, 0) == 1;
+
+		if (!$minify)
+		{
+			return false;
+		}
+
+		$class = 'MatthiasMullie\\Minify\\' . strtoupper($fileType);
+
+		if (!class_exists($class, true))
+		{
+			return false;
+		}
+
+		/** @var \MatthiasMullie\Minify\Minify $minifier */
+		$minifier = new $class($sourceFile);
+
+		$minifier->minify($minifiedFile);
+
+		return @is_file($minifiedFile);
+	}
 }

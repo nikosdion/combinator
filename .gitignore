@@ -1,3 +1,5 @@
 release/
-vendor/
+plugins/system/combinator/vendor/
+plugins/system/combinator/media/css/*.css
+plugins/system/combinator/media/js/*.js
 plg_system_*.zip
