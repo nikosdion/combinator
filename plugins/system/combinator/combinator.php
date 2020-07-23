@@ -557,6 +557,9 @@ class plgSystemCombinator extends CMSPlugin
 		$secretKey    = $this->app->get('secret');
 		$mediaVersion = md5($version->getLongVersion() . $secretKey);
 
+		// Should I regenerate the files when Debug Site is enabled?
+		$regenerateOnDebug = $this->params->get('debug_regenerate', 1) == 1;
+
 		/**
 		 * Reduces a list of files to a string of their MD5 hashes.
 		 *
@@ -588,7 +591,7 @@ class plgSystemCombinator extends CMSPlugin
 			$minifiedFile         = JPATH_SITE . $minifiedFileRelative;
 
 			// Joomla debug mode: always regenerate the files
-			if (JDEBUG)
+			if ($regenerateOnDebug && defined('JDEBUG') && JDEBUG)
 			{
 				$this->deleteFiles([
 					$outFile,
