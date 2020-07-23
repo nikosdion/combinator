@@ -640,6 +640,7 @@ class plgSystemCombinator extends CMSPlugin
 	 * @param   string  $dirname  The base directory to rebase relative links to
 	 *
 	 * @return  string
+	 * @since   1.0.0
 	 */
 	private function fixRelativeFolder(string $content, string $dirname): string
 	{
@@ -671,6 +672,7 @@ class plgSystemCombinator extends CMSPlugin
 	 * @param   array  $files
 	 *
 	 * @return  array
+	 * @since   1.0.0
 	 */
 	private function autoMinifiedSuffixes(array $files): array
 	{
@@ -696,8 +698,22 @@ class plgSystemCombinator extends CMSPlugin
 		return $ret;
 	}
 
+	/**
+	 * Minifies a file if the corresponding minification feature is enabled
+	 *
+	 * @param   string  $sourceFile    Absolute path to source file
+	 * @param   string  $minifiedFile  Asbolute path to minified file.
+	 *
+	 * @return  bool
+	 * @since   1.0.0
+	 */
 	private function conditionalMinify(string $sourceFile, string $minifiedFile): bool
 	{
+		if (@is_file($minifiedFile))
+		{
+			return true;
+		}
+
 		$fileType = pathinfo($sourceFile, PATHINFO_EXTENSION);
 		$minify   = $this->params->get('minify_' . $fileType, 0) == 1;
 
@@ -713,9 +729,19 @@ class plgSystemCombinator extends CMSPlugin
 			return false;
 		}
 
-		/** @var \MatthiasMullie\Minify\Minify $minifier */
-		$minifier        = new $class($sourceFile);
-		$minifiedContent = $minifier->minify();
+		$minifiedContent = null;
+
+		if ($fileType === 'js')
+		{
+			$minifiedContent = $this->closureCompiler($sourceFile);
+		}
+
+		if (is_null($minifiedContent))
+		{
+			/** @var \MatthiasMullie\Minify\Minify $minifier */
+			$minifier        = new $class($sourceFile);
+			$minifiedContent = $minifier->minify();
+		}
 
 		return File::write($minifiedFile, $minifiedContent);
 	}
@@ -727,6 +753,9 @@ class plgSystemCombinator extends CMSPlugin
 	 * corresponding compressed file (with a .gz or .br extension, respectively) does not already exist.
 	 *
 	 * @param   string  $sourceFile
+	 *
+	 * @return  void
+	 * @since   1.0.0
 	 */
 	private function conditionalCompress(string $sourceFile): void
 	{
@@ -778,6 +807,14 @@ class plgSystemCombinator extends CMSPlugin
 		}
 	}
 
+	/**
+	 * Deletes a list of files, if they exist.
+	 *
+	 * @param   array  $files  The files to delete
+	 *
+	 * @return  void
+	 * @since   1.0.0
+	 */
 	private function deleteFiles(array $files): void
 	{
 		foreach ($files as $file)
@@ -789,5 +826,42 @@ class plgSystemCombinator extends CMSPlugin
 
 			File::delete($file);
 		}
+	}
+
+	/**
+	 * Compresses a JS file with Google's Closure Compiler.
+	 *
+	 * @param   string  $file  The file to minify
+	 *
+	 * @return  string|null  Minified content. NULL if running Closure Compiler failed.
+	 * @since   1.0.0
+	 */
+	private function closureCompiler(string $file): ?string
+	{
+		// This does not work reliably on Windows.
+		if (in_array(strtolower(PHP_OS_FAMILY), ['windows', 'unknown']))
+		{
+			return null;
+		}
+
+		// We need to be able to execute a command directly.
+		if (!function_exists('shell_exec'))
+		{
+			return null;
+		}
+
+		// Do we have a Closure Compiler command line set up?
+		$compiler = $this->params->get('closureCompiler', '');
+
+		if (empty($compiler))
+		{
+			return null;
+		}
+
+		// Run Closure Compiler and return the output if it's not empty.
+		$cmd = sprintf('%s %s 2>/dev/null', escapeshellcmd($compiler), escapeshellarg($file));
+		$ret = trim(shell_exec($cmd));
+
+		return empty($ret) ? null : $ret;
 	}
 }

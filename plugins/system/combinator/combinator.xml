@@ -128,6 +128,14 @@
                     <option value="0">JNO</option>
                 </field>
 
+                <field
+                        name="closureCompiler"
+                        type="text"
+                        default=""
+                        label="PLG_SYSTEM_COMBINATOR_CLOSURECOMPILER_LABEL"
+                        description="PLG_SYSTEM_COMBINATOR_CLOSURECOMPILER_DESC"
+                        class="input-xlarge" />
+
             </fieldset>
             <fieldset
                 name="exportimport"
