@@ -83,7 +83,7 @@ class plgSystemCombinator extends CMSPlugin
 	 * @return  string
 	 * @since   1.0.0
 	 */
-	public function onAjaxCombinator()
+	public function onAjaxCombinator(): string
 	{
 		// Special case: a request with a Magic Key. Handle a special command.
 		$magicKey = trim($this->params->get('magicKey', ''));
@@ -880,10 +880,10 @@ class plgSystemCombinator extends CMSPlugin
 	 * Call me with a URL like:
 	 * https://www.example.com/index.php?option=com_ajax&group=system&plugin=combinator&format=raw&&akaction=purgemagic=MAGIC_KEY
 	 *
-	 * @return  mixed
+	 * @return  string
 	 * @since   1.0.0
 	 */
-	private function handleCommand()
+	private function handleCommand(): string
 	{
 		$action = $this->app->input->get->getCmd('akaction', 'purge');
 
@@ -914,6 +914,7 @@ class plgSystemCombinator extends CMSPlugin
 			$mediaRoot . 'css',
 			$mediaRoot . 'js',
 		];
+
 		foreach ($mediaFolders as $folder)
 		{
 			$files = Folder::files($folder, '.', false, true, ['.gitkeep']);
