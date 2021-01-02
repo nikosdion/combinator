@@ -13,3 +13,4 @@ This little plugin will help you combine, minify and compress CSS and JavaScript
 
 ```
 ~ First release
+```
