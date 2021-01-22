@@ -59,15 +59,4 @@ Internal builder task to build one plugin installation package at a time
     <target name="docsdeploy">
         <echo message="The documentation can be found in the README.md file on GitHub. This task is obsolete."/>
     </target>
-
-
-    <!--
-    ====================================================================================================
-    Tasks - Project management
-    ====================================================================================================
-    -->
-
-    <target name="release" depends="github-release">
-        <!-- Dependencies are enough -->
-    </target>
 </project>
